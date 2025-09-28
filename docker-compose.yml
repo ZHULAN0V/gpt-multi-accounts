@@ -1,0 +1,40 @@
+version: "3.9"
+
+networks:
+  edge:
+    external: true
+
+services:
+  traefik:
+    image: traefik:v3
+    restart: unless-stopped
+    command:
+      - --entrypoints.web.address=:80
+      - --providers.docker=true
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
+      - --api.dashboard=false
+    ports: ["80:80"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic
+    networks: [edge]
+
+  spawner:
+    build: ./spawner
+    restart: unless-stopped
+    environment:
+      - INACTIVITY_SECONDS=900
+      - TRAEFIK_MIDDLEWARE=forward-auth@file
+      - EDGE_NETWORK=edge
+      - APP_BASE_URL=http://<IP_СЕРВЕРА>      # укажите IP сервера
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks: [edge]
+    labels:
+      - traefik.enable=true
+      # Fallback: любой путь, начинающийся с /u/ -> в спавнер
+      - traefik.http.routers.fallback.rule=PathPrefix(`/u/`)
+      - traefik.http.routers.fallback.entrypoints=web
+      - traefik.http.routers.fallback.service=spawner
+      - traefik.http.services.spawner.loadbalancer.server.port=8080

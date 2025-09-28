@@ -1,0 +1,6 @@
+http:
+  middlewares:
+    forward-auth:
+      forwardAuth:
+        address: http://spawner:8080/auth
+        trustForwardHeader: true
