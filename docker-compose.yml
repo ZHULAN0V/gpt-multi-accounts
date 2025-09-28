@@ -27,13 +27,13 @@ services:
       - INACTIVITY_SECONDS=900
       - TRAEFIK_MIDDLEWARE=forward-auth@file
       - EDGE_NETWORK=edge
-      - APP_BASE_URL=http://<IP_СЕРВЕРА>      # укажите IP сервера
+      - APP_BASE_URL=http://<IP_ТВОЕГО_СЕРВЕРА>   # <-- замени на реальный IP
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks: [edge]
     labels:
       - traefik.enable=true
-      # Fallback: любой путь, начинающийся с /u/ -> в спавнер
+      # Все запросы на /u/... сначала идут в спавнер
       - traefik.http.routers.fallback.rule=PathPrefix(`/u/`)
       - traefik.http.routers.fallback.entrypoints=web
       - traefik.http.routers.fallback.service=spawner
